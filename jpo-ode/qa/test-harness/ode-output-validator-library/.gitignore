@@ -1,0 +1,13 @@
+/*.project
+/*.pydevproject
+/.vs/ode-output-validator-library/v15/*.suo
+/*.pyproj
+/*.sln
+*.pyc
+/.vscode
+.coverage
+.eggs/
+.scannerwork/
+coverage.xml
+odevalidator.egg-info/
+virtualenv/

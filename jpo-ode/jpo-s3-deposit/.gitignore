@@ -1,0 +1,12 @@
+target/
+
+.DS_Store
+
+idea/
+/.idea
+consumer-example.iml
+/.classpath
+/.project
+/.settings/*
+/bin
+/*.log

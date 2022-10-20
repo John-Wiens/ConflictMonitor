@@ -1,0 +1,4 @@
+python-dateutil
+kafka-python
+requests
+pyyaml

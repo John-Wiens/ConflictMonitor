@@ -1,0 +1,17 @@
+language: python
+dist: xenial # Travis does not support python 3.7 https://github.com/travis-ci/travis-ci/issues/9815
+sudo: yes
+python:
+  - "3.7"
+install:
+  - ./install.sh || travis_terminate 1;
+  - pip install coverage || travis_terminate 1;
+addons:
+  sonarcloud:
+    organization: "usdot-jpo-ode"
+    token:
+      secure: $SONAR_TOKEN
+script:
+  - coverage run --source=odevalidator setup.py test || travis_terminate 1;
+  - coverage xml -i || travis_terminate 1;
+  - sonar-scanner -X || travis_terminate 1;

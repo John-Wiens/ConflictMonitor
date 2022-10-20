@@ -1,0 +1,850 @@
+swagger: '2.0'
+info:
+  title: ODE REST API
+  description: >-
+    Description of functions available from the Operational Data Environment
+    (ODE) via RESTful interface. Ranges given follow interval notation, for
+    example (0,1) or (0..1) means 0 &lt; x &lt; 1 and [0,1] or [0..1] means 0
+    &le; x &le; 1.
+  version: 0.0.1
+host: yourhostname
+schemes:
+  - https
+basePath: /
+produces:
+  - application/json
+paths:
+  /version:
+    get:
+      summary: Get ODE version info
+      operationId: getVersion
+      description: Get ODE Version info
+      responses:
+        '200':
+          description: ODE version information returned
+          schema:
+            $ref: '#/definitions/versionResponse'
+
+  /tim/query:
+    post:
+      summary: Query an RSU for set TIMs
+      operationId: tim_query
+      description: Query an RSU for set TIMs
+      tags:
+        - TIM
+      parameters:
+        - name: RSU
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/RSU'
+      responses:
+        '200':
+          description: List of messages in JSON form
+          schema:
+            $ref: '#/definitions/Status'
+        '400':
+          description: Error in body request
+          schema:
+            $ref: '#/definitions/Status'
+        '408':
+          description: Timeout
+          schema:
+            $ref: '#/definitions/Status'
+        '500':
+          description: Misc error
+          schema:
+            $ref: '#/definitions/Status'
+  /tim:
+    put:
+      summary: Used to update an existing TIM already present on an RSU.
+      operationId: tim_put
+      description: >-
+        Update a Traveler Information Message (TIM) that has already been
+        deposited to an RSU. Parameters and response codes are identical to the
+        POST request. Will also deposit the new message to the SDW, if the SDW
+        field is present.
+      parameters:
+        - name: TravelerInputData
+          in: body
+          description: >-
+            Message containing the parameters for a Traveler Information Message
+            including delivery information.
+          required: true
+          schema:
+            $ref: '#/definitions/TravelerInputData'
+      tags:
+        - TIM
+      responses:
+        '200':
+          description: >-
+            Traveleer Information Message was submitted successfully. See the
+            response body or ODE User Guide for details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+        '400':
+          description: >-
+            Bad Request. Issued if request is invalid or failed to be executed.
+            See the response body or ODE User Guide for details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+        '500':
+          description: >-
+            Internal Server Error. See the response body or ODE User Guide for
+            details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+    post:
+      summary: >-
+        Submit Traveler Information Message (TIM) for broadcast to Connected
+        Vehicles.
+      operationId: tim_post
+      description: >-
+        Submits a TIM message to ODE for distribution to the specified RSUs and
+        SDW.
+      parameters:
+        - name: TravelerInputData
+          in: body
+          description: >-
+            Message containing the parameters for a Traveler Information Message
+            including delivery information.
+          required: true
+          schema:
+            $ref: '#/definitions/TravelerInputData'
+      tags:
+        - TIM
+      responses:
+        '200':
+          description: >-
+            Traveleer Information Message was submitted successfully. See the
+            response body or ODE User Guide for details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+        '400':
+          description: >-
+            Bad Request. Issued if request is invalid or failed to be executed.
+            See the response body or ODE User Guide for details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+        '500':
+          description: >-
+            Internal Server Error. See the response body or ODE User Guide for
+            details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+    delete:
+      summary: Delete a TIM message on an RSU.
+      operationId: tim_delete
+      description: Sets the status of a designated message index on an RSU to 6.
+      parameters:
+        - name: index
+          in: query
+          description: Index of message to be deleted
+          required: true
+          type: number
+          format: integer
+      tags:
+        - TIM
+      responses:
+        '200':
+          description: Deleted index
+          schema:
+            $ref: '#/definitions/Status'
+        '400':
+          description: Error in body request
+          schema:
+            $ref: '#/definitions/Status'
+        '408':
+          description: Timeout
+          schema:
+            $ref: '#/definitions/Status'
+        '500':
+          description: Misc error
+          schema:
+            $ref: '#/definitions/Status'
+  /rsuHeartbeat:
+    get:
+      summary: RSU SNMP Query
+      operationId: snmp_get
+      description: >-
+        Check the health and status of RSU devices through SNMP communication.
+        You should receive a detailed plain text response that looks like the
+        following example. If the device is off, a 4 second timeout will occur
+        and the ODE will indicate this with an "[ERROR] Empty response" message.
+        (This specific OID returns the amount of time since the device was last
+        powered on) "[1.3.6.1.2.1.1.3.0 = 0:05:12.59]"
+      parameters:
+        - name: ip
+          in: query
+          description: IP address of an RSU
+          required: true
+          type: number
+          format: string
+        - name: oid
+          in: query
+          description: OID of the attribute you wish to check on
+          required: true
+          type: number
+          format: string
+      tags:
+        - SNMP
+      responses:
+        '200':
+          description: OID responses
+          schema:
+            $ref: '#/definitions/Status'
+        '400':
+          description: Value input error
+          schema:
+            $ref: '#/definitions/Status'
+  /pdm:
+    post:
+      summary: PDM Interface
+      operationId: pdm_post
+      description: >-
+        Submits a Probe Data Management message to ODE for distribution to the
+        specified RSUs.
+      parameters:
+        - name: ProbeDataManagement
+          in: body
+          description: PDM Message
+          required: true
+          schema:
+            $ref: '#/definitions/ProbeDataManagement'
+      tags:
+        - PDM
+      responses:
+        '200':
+          description: >-
+            Probe Data Management message was submitted successfully. See the
+            response body or ODE User Guide for details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+        '400':
+          description: >-
+            Bad Request. Issued if request is invalid or failed to be executed.
+            See the response body or ODE User Guide for details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+        '500':
+          description: >-
+            Internal Server Error. See the response body or ODE User Guide for
+            details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+  /upload/obulog:
+    post:
+      summary: File upload interface
+      operationId: upload-obulog
+      description: >-
+        Uploads an OBU log file to ODE upload folder to be processed and
+        propaged
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: file
+          type: file
+          description: The file to upload.
+      tags:
+        - log file
+      responses:
+        '200':
+          description: File uploaded successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+        '400':
+          description: >-
+            Bad Request. Issued if request is invalid or failed to be executed.
+            See the response body or ODE User Guide for details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+        '500':
+          description: >-
+            Internal Server Error. See the response body or ODE User Guide for
+            details.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Status'
+definitions:
+  versionResponse:
+    type: object
+    properties:
+      version:
+        type: string
+        description: Runnign version in the form of `M.m.p[-SNAPSHOT]` where M is the Major version, m is the minor version and p is the patch or fix and square brackets signify optional component. If the software is from a nightly build, there will be an optional -SNAPSHOT postfix.
+  tim:
+    type: object
+    properties:
+      msgCnt:
+        type: integer
+        description: >-
+          Range [0..127], used to provide a sequence number within a stream of
+          messages with the same DSRCmsgID and from the same sender.
+      timestamp:
+        type: string
+        description: >-
+          ISO 8601 time of message creation, for example
+          "2017-08-03T22:25:36.297Z".
+      packetId:
+        type: string
+        description: Provides a unique message ID, in a 9-digit hex string.
+      urlB:
+        type: string
+        description: Standard URL link to designated resource.
+      dataFrames:
+        type: array
+        items:
+          $ref: '#/definitions/TravelerDataFrame'
+  TravelerInputData:
+    type: object
+    properties:
+      request:
+        $ref: '#/definitions/request'
+      tim:
+        $ref: '#/definitions/tim'
+  request:
+    type: object
+    properties:
+      rsus:
+        type: array
+        items:
+          $ref: '#/definitions/RSU'
+      snmp:
+        $ref: '#/definitions/SNMP'
+      sdw:
+        $ref: '#/definitions/SDW'
+  ProbeDataManagement:
+    type: object
+    properties:
+      ode:
+        $ref: '#/definitions/Ode'
+      pdm:
+        $ref: '#/definitions/PDM'
+      rsuList:
+        type: array
+        items:
+          $ref: '#/definitions/RSU'
+  Ode:
+    type: object
+    properties:
+      version:
+        type: integer
+  TravelerDataFrame:
+    type: object
+    required:
+      - sspindex
+    properties:
+      sspTimRights:
+        type: integer
+        description: A short header information
+      frameType:
+        type: string
+        description: >-
+          One of the following TravelerInfoType enumeration constants: unknown,
+          advisory, roadSignage, commercialSignage
+      msgId:
+        $ref: '#/definitions/MsgID'
+      startDateTime:
+        type: string
+      durationTime:
+        type: integer
+        description: >-
+          Range [0..3200], message duration time, in minutes. A value of 32000
+          means forever.
+      priority:
+        type: integer
+      sspLocationRights:
+        type: integer
+      sspindex:
+        type: integer
+        description: >-
+          The SSP index is used to control the data elements that follow the
+          occurrence of the index. The index relates back to the SSP contents in
+          the CERT used to declare what content is allowed by that CERT. In the
+          absence of a matching index in the message sender’s CERT, the message
+          contents are not valid.
+      regions:
+        type: array
+        items:
+          $ref: '#/definitions/Region'
+      sspMsgTypes:
+        type: integer
+      sspMsgContent:
+        type: integer
+      content:
+        type: string
+        description: >-
+          Part III content type, one of "advisory", "workZone", "genericSign", "speedLimit", or "exitService".
+      items:
+        type: array
+        items:
+          type: string
+          description: >-
+            If the value is purely an integer number, it will be interpreted as
+            ITIS code.  If it is not an integer, it will be interpreted as a
+            text message. If you intend to send an integral value as a literal
+            integer, prefix the number with a single quote ('), for example,
+            "'98765" will be interpreted as literal 98765. The prefix character
+            will be removed before populating  the TIM message One may mix ITIS
+            code and text in the  items array.
+  MsgID:
+    type: object
+    properties:
+      roadSignID:
+        $ref: '#/definitions/RoadSignID'
+      furtherInfoID:
+        type: string
+        description: >-
+          A link to any other incident information data that may be available in
+          the normal ATIS incident description or other messages, a 4-digit hex
+          string.
+  RoadSignID:
+    type: object
+    properties:
+      position:
+        $ref: '#/definitions/OdePosition3D'
+      viewAngle:
+        type: string
+      mutcdCode:
+        type: string
+        description: >-
+          One of the following enumeration constats: none,             --
+          non-MUTCD information regulatory,       -- "R" Regulatory signs
+          warning,          -- "W" warning signs maintenance,      -- "M"
+          Maintenance and construction motoristService,  -- Motorist Services
+          guide,            -- "G" Guide signs rec               -- Recreation
+          and Cultural Interest
+      crc:
+        type: string
+        description: >-
+          Message cyclic-redundancy-check code in 4-digit hex string.
+  Region:
+    type: object
+    properties:
+      name:
+        type: string
+      regulatorID:
+        type: integer
+      segmentId:
+        type: integer
+      anchor_lat:
+        type: integer
+      anchor_long:
+        type: integer
+      anchor_eleveation:
+        type: integer
+      laneWidth:
+        type: number
+        description: 'Lane width measured in meters [0.00..327.67m] in increments of 0.01m.'
+      directionality:
+        type: integer
+      closedPath:
+        type: string
+      direction:
+        type: string
+      description:
+        type: string
+        description: 'Valid values are "path" OR "geometry". oldregion is not supported'
+      path:
+        $ref: '#/definitions/Path'
+      geometry:
+        $ref: '#/definitions/Geometry'
+      oldRegion:
+        $ref: '#/definitions/OldRegion'
+  ComputedLane:
+    type: object
+    properties:
+      laneID:
+        type: integer
+        description: 'LaneID [0..255]'
+      offsetXaxis:
+        type: number
+        description: 'Reference lane offset measured in meters [-327.67..327.67m].'
+      offsetYaxis:
+        type: number
+        description: 'Reference lane offset measured in meters [-327.67..327.67m].'
+      rotateXY:
+        type: number
+        description: 'Lane rotation measured in degrees [0..359.9875].'
+      scaleXaxis:
+        type: number
+        description: 'Scale factor in percent [0..202.35%].'
+      scaleYaxis:
+        type: number
+        description: 'Scale factor in percent [0..202.35%].'
+  Path:
+    type: object
+    properties:
+      type:
+        type: string
+      scale:
+        type: integer
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/Node'
+      computedLane:
+        $ref: '#/definitions/ComputedLane'
+  Attribute:
+    type: object
+    properties:
+      localNodes:
+        type: array
+        items:
+          type: integer
+      disabledLists:
+        type: array
+        items:
+          type: integer
+      enabledLists:
+        type: array
+        items:
+          type: integer
+      dataLists:
+        type: array
+        items:
+          $ref: '#/definitions/DataList'
+      dWidth:
+        type: integer
+      dEleveation:
+        type: integer
+  DataList:
+    type: object
+    properties:
+      pathEndpointAngle:
+        type: integer
+        description: 'Final angle in last point of lane path in integer degrees [-150..150].'
+      laneCrownCenter:
+        type: number
+        description: 'RoadwayCrownAngle in degrees [-38.1..38.1] in increments of 0.3.'
+      laneCrownRight:
+        type: number
+        description: 'RoadwayCrownAngle in degrees [-38.1..38.1] in increments of 0.3.'
+      laneCrownLeft:
+        type: number
+        description: 'RoadwayCrownAngle in degrees [-38.1..38.1] in increments of 0.3.'
+      laneAngle:
+        type: number
+        description: 'MergeDivergeNodeAngle in degrees [-240..240] in increments of 1.5.'
+      speedLimits:
+        $ref: '#/definitions/SpeedLimit'
+  SpeedLimit:
+    type: object
+    properties:
+      type:
+        type: integer
+        description: >-
+          SpeedLimitType enumeration integer value
+          [0=unknown,1=maxSpeedInSchoolZone,..,12=vehiclesWithTrailersNightMaxSpeed]
+      velocity:
+        type: number
+        description: >-
+          Velocity in meters per second [0.00..163.82] in increments of 0.02
+          m/s.
+  Geometry:
+    type: object
+    description: >-
+      GeometricProjection data frame is used to describe various geometric
+      spatial areas
+    properties:
+      direction:
+        type: string
+        description: >-
+          HeadingSlice bitstring representing field of view over which this
+          projection applies
+      extent:
+        type: integer
+        description: 'Extent enumeration integer value [0=useInstantlyOnly,...,15=forever]'
+      laneWidth:
+        type: number
+        description: 'Lane width measured in meters [0.00..327.67m] in increments of 0.01m.'
+      circle:
+        $ref: '#/definitions/Circle'
+  OldRegion:
+    type: object
+    properties:
+      direction:
+        type: string
+      extent:
+        type: integer
+      area:
+        type: string
+      regionPointSet:
+        $ref: '#/definitions/RegionPointSet'
+      circle:
+        $ref: '#/definitions/Circle'
+      shapePointSet:
+        $ref: '#/definitions/ShapePointSet'
+  Circle:
+    type: object
+    properties:
+      position:
+        $ref: '#/definitions/OdePosition3D'
+      radius:
+        type: integer
+      units:
+        type: integer
+  ShapePointSet:
+    type: object
+    properties:
+      anchor:
+        $ref: '#/definitions/OdePosition3D'
+      laneWidth:
+        type: integer
+      directionality:
+        type: string
+        description: one of ENUMERATED {
+          unavailable (0), -- unknown or NA, not typically used in valid expressions
+          forward (1), -- direction of travel follows node ordering
+          reverse (2), -- direction of travel is the reverse of node ordering
+          both (3) -- direction of travel allowed in both directions
+      nodeList:
+        $ref: '#/definitions/NodeListXY'
+  NodeListXY:
+    type: object
+    properties:
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/Node'
+      computed:
+        $ref: '#/definitions/ComputedLane'
+  RegionPointSet:
+    type: object
+    properties:
+      position:
+        $ref: '#/definitions/OdePosition3D'
+      zoom:
+        type: integer
+        description: (OPTIONAL) A zoom scale applied in units of 2^N.
+      regionList:
+        type: array
+        items:
+          $ref: '#/definitions/RegionList'
+  RegionList:
+    type: object
+    properties:
+      xOffset:
+        type: number
+        description: 'OffsetLL-B16 measured in degrees [-0.0032767..0.0032767]'
+      yOffset:
+        type: number
+        description: 'OffsetLL-B16 measured in degrees [-0.0032767..0.0032767]'
+      zOffset:
+        type: number
+        description: '(OPTIONAL) OffsetLL-B16 measured in degrees [-0.0032767..0.0032767]'
+  OdePosition3D:
+    type: object
+    properties:
+      latitude:
+        type: number
+        description: 'Latitude in degrees [-90.0..90.0]'
+      longitude:
+        type: number
+        description: 'Longitude in degrees [-90.0..90.0]'
+      elevation:
+        type: number
+        description: 'Elevation in meters [-409.5..6143.9]'
+  Node:
+    type: object
+    properties:
+      delta:
+        type: string
+        description: >-
+          Valid values for offset values are offset XY values is node-XY. For this delta, x and y must be defined in meters from achor point.
+          Valid values for offset Lat/Lon values is node-LL. For this delta nodeLat and NodeLong must be defined indegrees from anchor point.
+          Valid values for absolute Lat/Lon is node-LatLon. For this delta nodeLat and nodeLong must be defined for each nodenot relative to anchor point.
+      nodeLat:
+        type: number
+        description: 'Latitude in degrees for node-LL (offset) or node-LatLon'
+      nodeLong:
+        type: number
+        description: 'Longitude in degrees for Node-LL (offset) or node-LatLon'
+      x:
+        type: number
+        description: 'Offset x axis in meters for node-XY delta'
+      y:
+        type: number
+        description: 'Offset y axis in meters for node-XY delta'
+      attributes:
+        $ref: '#/definitions/Attribute'
+  SNMP:
+    type: object
+    description: 'Optional field, needed for SNMP deposit to RSU.'
+    properties:
+      rsuid:
+        type: string
+      msgid:
+        type: string
+      mode:
+        type: string
+      channel:
+        type: string
+      interval:
+        type: string
+      deliverystart:
+        type: string
+        description: >-
+          ISO string for message delivery start time. Takes priority over
+          "deliverystart" field in SDW.
+      deliverystop:
+        type: string
+        description: >-
+          ISO string for message delivery stop time. Takes priority over
+          "deliverystop" field in SDW.
+      enable:
+        type: string
+      status:
+        type: string
+  RSU:
+    type: object
+    description: 'Optional field, needed for SNMP deposit to RSU.'
+    properties:
+      rsuIndex:
+        type: integer
+        description: Index of message storage on RSU.
+      rsuTarget:
+        type: string
+        description: IPv4 address of RSU
+      rsuUsername:
+        type: string
+        description: SNMP username (Not required if value is pre-configured in ODE properties)
+      rsuPassword:
+        type: string
+        description: SNMP password (Not required if value is pre-configured in ODE properties)
+      rsuRetries:
+        type: integer
+        description: Number of retries upon message send failure
+      rsuTimeout:
+        type: integer
+        description: Timeout measured in milliseconds
+  SDW:
+    type: object
+    properties:
+      deliverystart:
+        type: string
+        description: >-
+          Optional field, ISO string for message delivery start time. Identical
+          to "deliverystart" field in SNMP for when RSU deposit not desired.
+      deliverystop:
+        type: string
+        description: >-
+          Optional field, ISO string for message delivery stop time. Identical
+          to "deliverystop" field in SNMP for when RSU deposit not desired.
+      groupID:
+        type: string
+        description: >-
+          Eight-digit hex code of the groupID to use, for example "A123B456".
+          GroupID is a DSRC.TemporaryID used for message identification.
+      recordID:
+        type: string
+        description: >-
+          Eight-digit hex code of the recordID to use, for example "A123B456".
+          RecordID is a DSRC.TemporaryID used for message identification.
+      ttl:
+        type: string
+        description: Message time to live.
+        enum:
+          - oneminute
+          - thirtyminutes
+          - oneday
+          - oneweek
+          - onemonth
+          - oneyear
+      serviceRegion:
+        properties:
+          nwCorner:
+            type: object
+            properties:
+              latitude:
+                type: string
+              longitude:
+                type: string
+          seCorner:
+            type: object
+            properties:
+              latitude:
+                type: string
+              longitude:
+                type: string
+  PDM:
+    type: object
+    properties:
+      sampleStart:
+        type: string
+      sampleEnd:
+        type: string
+      directions:
+        type: string
+      termChoice:
+        type: string
+      termTime:
+        type: string
+      termDistance:
+        type: string
+      snapshotChoice:
+        type: string
+      minSnapshotTime:
+        type: string
+      maxSnapshotTime:
+        type: string
+      minSnapshotDistance:
+        type: string
+      maxSnapshotDistance:
+        type: string
+      snapshotMinSpeed:
+        type: string
+      snapshotMaxSpeed:
+        type: string
+      txInterval:
+        type: string
+      vehicleStatusRequestList:
+        type: array
+        items:
+          $ref: '#/definitions/VehicleStatusRequest'
+  VehicleStatusRequest:
+    type: object
+    properties:
+      tag:
+        type: string
+      subTag:
+        type: string
+      lessThenValue:
+        type: string
+      moreThenValue:
+        type: string
+      sendAll:
+        type: string
+      status:
+        type: string
+  Status:
+    type: object
+    properties:
+      success:
+        type: boolean
+      message:
+        type: string
